@@ -1,116 +1,165 @@
 import 'package:flutter/material.dart';
 
-void main() => runApp(AgendaApp());
+void main() => runApp(const MyApp());
 
-class AgendaApp extends StatelessWidget {
+class MyApp extends StatelessWidget {
+  const MyApp({super.key});
+
   @override
   Widget build(BuildContext context) {
     return MaterialApp(
+      title: 'Lista de Alumnos',
       debugShowCheckedModeBanner: false,
-      title: 'Agenda',
-      home: AgendaPage(),
+      theme: ThemeData(
+        primarySwatch: Colors.cyan,
+      ),
+      home: const HomeScreen(),
     );
   }
 }
 
-class Agenda {
-  String nombre;
-  String control;
+class Persona {
+  final String name;
+  final String lastname;
+  final String cuenta;
 
-  Agenda(this.nombre, this.control);
+  Persona(this.name, this.lastname, this.cuenta);
 }
 
-class AgendaPage extends StatefulWidget {
+class HomeScreen extends StatefulWidget {
+  const HomeScreen({super.key});
+
   @override
-  _AgendaPageState createState() => _AgendaPageState();
+  _HomeScreenState createState() => _HomeScreenState();
 }
 
-class _AgendaPageState extends State<AgendaPage> {
-  final List<Agenda> _contactos = [];
-  final TextEditingController _nombreController = TextEditingController();
-  final TextEditingController _controlController = TextEditingController();
-  int _contactCount = 0;
+class _HomeScreenState extends State<HomeScreen> {
+  final List<Persona> _alumnos = [
+    Persona('JasielVaro', 'Vazquez', '20221579'),
+    Persona('Cielo', 'Silva', '20221680'),
+    Persona('Angel', 'Vazquez', '20216534'),
+    Persona('Gabriela', 'Topete', '20216635'),
+    Persona('Tatiana', 'Rosiles', '20216503'),
+    Persona('Alvayaso', 'Cardenas', '20207854'),
+  ];
 
-  void _agregarContacto() {
-    final nombre = _nombreController.text;
-    final control = _controlController.text;
+  final TextEditingController _nameController = TextEditingController();
+  final TextEditingController _lastnameController = TextEditingController();
+  final TextEditingController _cuentaController = TextEditingController();
 
-    if (nombre.isNotEmpty && control.isNotEmpty) {
+  void _addAlumno() {
+    if (_nameController.text.isNotEmpty &&
+        _lastnameController.text.isNotEmpty &&
+        _cuentaController.text.isNotEmpty) {
       setState(() {
-        _contactos.add(Agenda(nombre, control));
-        _contactCount = _contactos.length;
+        _alumnos.add(Persona(
+          _nameController.text,
+          _lastnameController.text,
+          _cuentaController.text,
+        ));
       });
-
-      _nombreController.clear();
-      _controlController.clear();
+      _nameController.clear();
+      _lastnameController.clear();
+      _cuentaController.clear();
+      Navigator.of(context).pop(); // Cierra el diálogo
     }
   }
 
-  void _verAgenda() {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (context) => ListadoContactosPage(contactos: _contactos),
-      ),
-    );
-  }
-
-  @override
-  Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: Text('Agenda'),
-      ),
-      body: Padding(
-        padding: const EdgeInsets.all(16.0),
-        child: Column(
-          children: [
-            TextField(
-              controller: _nombreController,
-              decoration: InputDecoration(labelText: 'Nombre'),
+  void _removeAlumno(int index) {
+    showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Confirmar eliminación'),
+          content:
+              const Text('¿Estás seguro de que deseas eliminar a este alumno?'),
+          actions: <Widget>[
+            TextButton(
+              child: const Text('Cancelar'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
             ),
-            TextField(
-              controller: _controlController,
-              decoration: InputDecoration(labelText: 'No. Control'),
+            TextButton(
+              child: const Text('Eliminar'),
+              onPressed: () {
+                setState(() {
+                  _alumnos.removeAt(index);
+                });
+                Navigator.of(context).pop();
+              },
             ),
-            SizedBox(height: 20),
-            ElevatedButton(
-              onPressed: _agregarContacto,
-              child: Text('Agregar'),
-            ),
-            ElevatedButton(
-              onPressed: _verAgenda,
-              child: Text('Ver agenda'),
-            ),
-            SizedBox(height: 20),
-            Text('Total de contactos: $_contactCount'),
           ],
-        ),
-      ),
+        );
+      },
     );
   }
-}
 
-class ListadoContactosPage extends StatelessWidget {
-  final List<Agenda> contactos;
-
-  ListadoContactosPage({required this.contactos});
+  void _showAddAlumnoDialog() {
+    showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: const Text('Agregar Alumno'),
+          content: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              TextField(
+                controller: _nameController,
+                decoration: const InputDecoration(labelText: 'Nombre'),
+              ),
+              TextField(
+                controller: _lastnameController,
+                decoration: const InputDecoration(labelText: 'Apellido'),
+              ),
+              TextField(
+                controller: _cuentaController,
+                decoration: const InputDecoration(labelText: 'Cuenta'),
+              ),
+            ],
+          ),
+          actions: [
+            TextButton(
+              onPressed: _addAlumno,
+              child: const Text('Agregar'),
+            ),
+            TextButton(
+              onPressed: () => Navigator.of(context).pop(),
+              child: const Text('Cancelar'),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       appBar: AppBar(
-        title: Text('Listado de Contactos'),
+        title: const Text('Lista de Alumnos'),
       ),
       body: ListView.builder(
-        itemCount: contactos.length,
+        itemCount: _alumnos.length,
         itemBuilder: (context, index) {
-          final contacto = contactos[index];
-          return ListTile(
-            title: Text(contacto.nombre),
-            subtitle: Text('No. Control: ${contacto.control}'),
+          final alumno = _alumnos[index];
+          return Card(
+            margin: const EdgeInsets.all(8.0),
+            child: ListTile(
+              title: Text('${alumno.name} ${alumno.lastname}'),
+              subtitle: Text('Cuenta: ${alumno.cuenta}'),
+              trailing: IconButton(
+                icon: const Icon(Icons.delete, color: Colors.red),
+                onPressed: () => _removeAlumno(index),
+              ),
+            ),
           );
         },
+      ),
+      floatingActionButton: FloatingActionButton(
+        backgroundColor: Colors.cyan,
+        onPressed: _showAddAlumnoDialog,
+        child: const Icon(Icons.person_add),
       ),
     );
   }
